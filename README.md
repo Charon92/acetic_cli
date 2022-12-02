@@ -12,7 +12,7 @@ Currently, I am still fleshing it out. I could 100% use other libraries for lots
 3. Most libraries that provide these sorts of functionalities are _massive_ (Looking at you OpenCV)
 
 ### How to use?
-Once built there will be an executable called `acetic_cli` that can be called like so:
+Once built there will be an executable called `acetic` that can be called like so:
 
 ```shell
 acetic ./files/image.jpg edge
