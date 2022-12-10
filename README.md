@@ -12,10 +12,14 @@ Currently, I am still fleshing it out. I could 100% use other libraries for lots
 3. Most libraries that provide these sorts of functionalities are _massive_ (Looking at you OpenCV)
 
 ### How to use?
-Once built there will be an executable called `acetic_cli` that can be called like so:
+Once built there will be an executable called `acetic` that can be called like so:
 
 ```shell
-acetic ./files/image.jpg edge
+acetic edge ./files/image.jpg
+```
+
+```shell
+acetic encode ./files/image.png "Some text that will be encoded into an image file"
 ```
 
 #### Args
@@ -23,9 +27,12 @@ acetic ./files/image.jpg edge
 
 `process` - What process you would like to do (encode, decode, edge, phash etc.)
 
+`data` - For `encode` only. The text to be encoded
+
 #### Currently supported processes (as of Nov 30 2022)
 - edge
 - phash
+- encode (png)
 
 Note: Images saved for edge detection use the filename format `{UTC NOW}_{ORIGINAL FILE NAME}` and will save in the 
 same directory that the file is in.

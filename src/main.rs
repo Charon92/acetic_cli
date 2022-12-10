@@ -1,3 +1,4 @@
+mod crypt;
 mod phash;
 mod png;
 mod jpeg;
@@ -5,17 +6,22 @@ mod edge_detection;
 
 use clap::Parser;
 use chrono;
-use clap::builder::Str;
-use image::{Luma, ImageBuffer, RgbImage, Rgb, Rgb32FImage, GrayImage};
+use image::{Luma, Rgb, Rgb32FImage, GrayImage};
+use std::env;
+use std::str;
 use std::string::{String};
 use std::thread::available_parallelism;
 use std::time::SystemTime;
 
+const START: &str = "######";
+const END: &str = "======";
+
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
+    process: String,
     filepath: String,
-    process: String
+    data: Option<String>,
 }
 
 fn edge(path: String) -> String {
@@ -61,27 +67,71 @@ fn edge(path: String) -> String {
     return output_name
 }
 
+fn encode( path: String, data: Vec<u8> ) -> String {
+    let mut encoded: String = String::new();
+    let ext = path.split( "." ).last().unwrap();
+    if ext.contains( "png" ) {
+        let image = png::create( path );
+        encoded = image.encode( data );
+    } else if ext.contains( ".jpg" ) {
+        let image = jpeg::create( path );
+        encoded = image.encode( data );
+    }
+
+    return encoded;
+}
+
+fn decode( path: String, secret_key: String ) -> String {
+    let mut decoded: Vec::<u8> = Vec::new();
+    if path.split( "." ).last().unwrap().contains( "png" ) {
+        let image = png::create( path );
+        decoded = image.decode();
+    }
+    let plain_text = crypt::decrypt( secret_key, decoded.as_slice());
+    return String::from_utf8( plain_text ).unwrap();
+}
+
 fn main() {
     let start = SystemTime::now();
+
+    let secret_key = env::var( "SEC_K" ).unwrap_or( String::from( "Super_Secret_Key_To_Protect_You__" ) );
 
     let args: Args = Args::parse();
     let path = args.filepath.clone();
     let process = args.process;
     let mut output = String::new();
+    let mut encrypted= Vec::new();
+    let mut data = String::new();
 
-    let default_parallelism_approx = available_parallelism().unwrap().get();
-    println!("Available cores (approx.): {}", default_parallelism_approx);
+    let mut start_sequence: Vec<u8> = START.as_bytes().to_vec();
+    let mut end_sequence: Vec<u8> = END.as_bytes().to_vec();
+
+    if process.as_str() == "encode" {
+        data = args.data.expect( "No data found to encode. Aborting." );
+        if data.len() > 0 {
+            encrypted = crypt::encrypt( secret_key.clone(), data );
+        }
+        println!("Found: {:?}", encrypted);
+    }
+
+    start_sequence.append( &mut encrypted );
+    start_sequence.append( &mut end_sequence );
+
+    // let default_parallelism_approx = available_parallelism().unwrap().get();
+    // println!("Available cores (approx.): {}", default_parallelism_approx);
 
     match process.as_str() {
         "edge" => output = edge( path ),
         "phash" => output = phash::phash( path ),
+        "encode" => output = encode( path, start_sequence ),
+        "decode" => output = decode( path, secret_key ),
          _ => println!( "No matched process found. Aborting." )
     }
 
     println!("Output: {}", output);
 
     let end = SystemTime::now();
-    let duration = end.duration_since(start).unwrap();
+    let duration = end.duration_since( start ).unwrap();
     println!("It took {} milliseconds", duration.as_millis());
 
 }

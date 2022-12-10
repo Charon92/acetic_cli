@@ -47,7 +47,7 @@ impl JPEG {
         return thumb_path
     }
 
-    pub fn encode(&self) {
+    pub fn encode(&self,  data: Vec<u8>) -> String {
         let mut file = match File::open(&self.path) {
             Err(why) => panic!("couldn't open {}: {}", self.path, why),
             Ok(file) => file,
@@ -58,5 +58,11 @@ impl JPEG {
             Err(why) => panic!("couldn't read {}: {}", self.path, why),
             Ok(_) => print!("{} contains:\n{}", self.path, s),
         }
+
+        return String::from(self.path.clone());
     }
+}
+
+pub fn create(filepath: String) -> JPEG {
+    return JPEG::new(filepath);
 }
